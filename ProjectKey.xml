@@ -1,0 +1,12 @@
+<supervisors>
+<supervisor name="Sergey Politsyn">
+<project id="1a1a" name="Кр1"/>
+<project id="2aa2aa" name="Кр2"/>
+<apiKey>7bd0ad78c5a96b2434a07fec485eff8a67f76214</apiKey>
+</supervisor>
+<supervisor name="Irina Danilova">
+<project id="1a1a" name="Тестовый проект 1"/>
+<project id="2aa2aa" name="Тестовый проект 2"/>
+<apiKey>f4b2a2953034f344cb45c08359ee76577dc20977</apiKey>
+</supervisor>
+</supervisors>

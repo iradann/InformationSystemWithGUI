@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="SystemFX.jnlp">
+  <information>
+    <title>SystemFX</title>
+    <vendor>user</vendor>
+    <description>null</description>
+    <offline-allowed/>
+  </information>
+  <resources>
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="SystemFX.jar" size="17145" download="eager" />
+    <jar href="lib\commons-codec-1.9.jar" size="263965" download="eager" />
+    <jar href="lib\commons-logging-1.2.jar" size="61829" download="eager" />
+    <jar href="lib\httpclient-4.5.1.jar" size="732765" download="eager" />
+    <jar href="lib\httpcore-4.4.3.jar" size="326594" download="eager" />
+    <jar href="lib\json-20090211.jar" size="45944" download="eager" />
+    <jar href="lib\okhttp-3.0.0-RC1.jar" size="326383" download="eager" />
+    <jar href="lib\okhttp-3.4.0-RC1.jar" size="344452" download="eager" />
+    <jar href="lib\okhttp-3.9.1.jar" size="406252" download="eager" />
+    <jar href="lib\okio-1.13.0.jar" size="81811" download="eager" />
+    <jar href="lib\redmine-java-api-3.0.1-javadoc.jar" size="386248" download="eager" />
+    <jar href="lib\redmine-java-api-3.0.1-sources.jar" size="98743" download="eager" />
+    <jar href="lib\redmine-java-api-3.0.1.jar" size="154230" download="eager" />
+    <jar href="lib\slf4j-api-1.7.1.jar" size="26065" download="eager" />
+  </resources>
+  <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="SystemFX" >
+    <param name="requiredFXVersion" value="8.0+"/>
+  </applet-desc>
+  <jfx:javafx-desc  width="800" height="600" main-class="systemfx.SystemFX"  name="SystemFX" />
+  <update check="always"/>
+</jnlp>
