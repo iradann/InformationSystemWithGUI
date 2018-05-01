@@ -10,8 +10,8 @@ package systemfx;
  * @author user
  */
 class Project {
-    private String id;
-    private String ProjectName;
+    public String id;
+    public String ProjectName;
     
     public Project(String name, String id) {
         this.id = id;

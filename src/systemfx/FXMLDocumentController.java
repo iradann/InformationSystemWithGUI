@@ -24,6 +24,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -36,9 +37,10 @@ import org.xml.sax.SAXException;
  * @author user
  */
 public class FXMLDocumentController implements Initializable {
-    
+
     XMLReader r = new XMLReader();
-    
+    ArrayList<Project> projects = new ArrayList<Project>();
+
     @FXML
     private Button buttonDown;
 
@@ -53,68 +55,93 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private TextField textFieldURL;
+    
+    @FXML
+    private TextField textFieldJavaErrAmount;
+    
+    @FXML
+    private CheckBox checkBoxPerevod;
 
-    private ConnectionWithRedmine connection;
-
+    //private ConnectionWithRedmine connection;
     public void initialize(URL url, ResourceBundle bn) {
-        
+
         r.readXML("ProjectKey.xml");
         r.owners.forEach((ProjectOwner p) -> {
             r.usersNameList.add(p.getName());
         });
         ObservableList<String> userNames = FXCollections.observableArrayList(r.usersNameList);
         comboxUserName.setItems(userNames);
-        
-        
+
     }
-    
+
     @FXML
     private void handleUserChoice() {
-        
+
         if (!comboxUserName.getValue().toString().isEmpty()) {
-            
+            for (ProjectOwner o : r.owners) {
+                if (comboxUserName.getValue().toString().equals(o.getName())) {
+                    projects = o.getHisProjects();
+                    Properties.apiAccessKey = o.getApiKey();
+                    break;
+                }
+            }
+            for (Project p : projects) {
+                r.projectIDsList.add(p.getId());
+                r.projectNameList.add(p.getProjectName());
+            }
         }
+        ObservableList<String> projectNames = FXCollections.observableArrayList(r.projectNameList);
+        comboxProject.setItems(projectNames);
     }
 
     @FXML
     private void handleButtonAction(ActionEvent event) {
-       
-        System.out.println(r.projectIDsList);
-        System.out.println(r.projectNameList);
-        /*
-        handleProjectChoice();
-        List<Issue> issues = null;
-        try {
-            issues = connection.getIssues();
-        } catch (RedmineException ex) {
-            Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        ArrayList<Integer> attachID = new ArrayList<>();
+        ConnectionWithRedmine connect = this.handleProjectChoice();
+        if (!comboxUserName.getValue().toString().isEmpty()
+                && !comboxProject.getValue().toString().isEmpty()
+                && !comboxVersion.getValue().toString().isEmpty()) {
 
-        for (Issue issue : issues) {
-            if (issue.getStatusName() != "Closed" && issue.getStatusName() != "Approved") {
-                System.out.println(issue.toString());
-                connection.setVersionForCheck((String) comboxVersion.getValue(), issue);
+            List<Issue> issues = null;
+            try {
+                issues = connect.getIssues();
+            } catch (RedmineException ex) {
+                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            //ArrayList<Integer> attachID = new ArrayList<>();
 
+            for (Issue issue : issues) {
+                if (issue.getStatusName() != "Closed" && issue.getStatusName() != "Approved") {
+                    System.out.println(issue.toString());
+                    connect.setVersionForCheck((String) comboxVersion.getValue(), issue);
+
+                }
             }
         }
-        */
     }
 
     @FXML
-    private void handleProjectChoice() {
+    private ConnectionWithRedmine handleProjectChoice() {
 
         if (textFieldURL.getText().isEmpty()) {
             Properties.url = "http://www.hostedredmine.com";
         } else {
             Properties.url = textFieldURL.getText();
         }
-        String valueProjectKey = comboxProject.getValue().toString();
+
+        if (!comboxProject.getValue().toString().isEmpty()) {
+            for (Project p : projects) {
+                if (p.getProjectName().equals(comboxProject.getValue().toString())) {
+                    Properties.projectKey = p.getId();
+                    break;
+                }
+            }
+        }
+
         Collection<Version> versions = new ArrayList();
 
-        ConnectionWithRedmine connection = new ConnectionWithRedmine(Properties.apiAccessKey, valueProjectKey, Properties.url);
+        ConnectionWithRedmine connection = new ConnectionWithRedmine(Properties.apiAccessKey, Properties.projectKey, Properties.url);
         try {
-            versions = connection.getVersions(valueProjectKey);
+            versions = connection.getVersions(Properties.projectKey);
         } catch (RedmineException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -126,9 +153,20 @@ public class FXMLDocumentController implements Initializable {
         }
         ObservableList<String> targetVersionLost = FXCollections.observableArrayList(versii);
         comboxVersion.setItems(targetVersionLost);
+        
+        return connection;
     }
-
     
+    @FXML
+    private void handleJavaErrorAmount() {
+        ConnectionWithRedmine connect = this.handleProjectChoice();
+        connect.javaErrorAmount = Integer.parseInt(textFieldJavaErrAmount.getText());
+        
+        if (checkBoxPerevod.isSelected()) {
+            connect.perevod = "Da";
+        }
+            
+    }
 
     public Collection<String> readFile(String fileDir) {
         Collection<String> lines = new ArrayList<>();
@@ -139,5 +177,4 @@ public class FXMLDocumentController implements Initializable {
         }
         return lines;
     }
-
 }

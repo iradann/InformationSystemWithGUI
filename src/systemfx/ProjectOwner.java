@@ -12,9 +12,9 @@ import java.util.function.Consumer;
  * @author user
  */
 class ProjectOwner {
-    private String name;
-    private ArrayList<Project> hisProjects;
-    private String apiKey;
+    public String name;
+    public ArrayList<Project> hisProjects;
+    public String apiKey;
 
     public ProjectOwner(String name) {
         this.name = name;

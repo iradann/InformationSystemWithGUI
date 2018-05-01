@@ -85,7 +85,35 @@ public class ConnectionWithRedmine {
                     downloadAttachments(attach.getContentURL(),
                             apiAccessKey,
                             fileToManage);
+                    
+                    if (attach.getFileName().endsWith(".py")) {
+                        new MyPLint().startPylint(attach.getFileName());
+                        this.uploadAttachment(issue, ".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
+                        String result = readLastLineInFile(".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
+                       // double pyRating = this.pythonRatingCheck(result);
+                       // if (pythonRating > pyRating) {
+                       //     issue.setStatusId(4);
+                      //  }
+                        issue.setNotes(result);
+                        this.updateIssue(issue);
 
+                    }
+                    
+                    if (attach.getFileName().endsWith(".java")) {
+                        new MyCheckStyle().startCheckStyle(attach.getFileName());
+                        this.uploadAttachment(issue, ".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
+                        String lastLine = readLastLineInFile(".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
+                        int errorAmount = this.javaErrorAmount(lastLine);
+                        if (javaErrorAmount <= errorAmount && perevod.equals("Da")) {
+                            issue.setStatusId(5);
+                            int id = issue.getAuthorId();
+                            issue.setAssigneeId(id);
+                        }
+                        issue.setNotes(lastLine);
+                        this.updateIssue(issue);
+                    }
+                    
+                    // cleanDirectory(new File(".\\myFiles\\"));
                 }
             } else {
                 continue;
@@ -147,16 +175,6 @@ public class ConnectionWithRedmine {
         } catch (IOException ex) {
             Logger.getLogger(ConnectionWithRedmine.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-    }
-
-    //срабатывает, но неверно загружает поток данных на сайт -- не как .zip файл
-    public void uploadAttachmentSonar(Issue issue, String path) throws RedmineException, IOException {
-
-        String filename = path;
-        File file = new File(filename);
-        // не работает пока что...
-        attachmentManager.addAttachmentToIssue(issue.getId(), file, ContentType.create("application/zip").getMimeType());
 
     }
 
