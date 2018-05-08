@@ -19,4 +19,5 @@ public class Properties {
     public static int javaErrorAmount = 0;
     public static double pythonErrorRating = 0;
     public static String perevod = null;
+    
 }

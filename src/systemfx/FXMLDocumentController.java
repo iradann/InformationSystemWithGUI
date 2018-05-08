@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -27,7 +29,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleGroup;
 import org.apache.commons.codec.Charsets;
 import org.xml.sax.SAXException;
@@ -55,14 +59,37 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private TextField textFieldURL;
-    
+
     @FXML
-    private TextField textFieldJavaErrAmount;
-    
+    private TextField textFieldJavaErrorAmount;
+
     @FXML
     private CheckBox checkBoxPerevod;
 
-    //private ConnectionWithRedmine connection;
+    @FXML
+    private ComboBox comboBoxPythonRating;
+
+    @FXML
+    private RadioButton radioButtonStatusClosed;
+
+    @FXML
+    private RadioButton radioButtonStatusApproved;
+
+    @FXML
+    private RadioButton radioButtonAppointForStudent;
+
+    @FXML
+    private RadioButton radioButtonAppointForProfessor;
+
+    @FXML
+    private CheckBox checkBoxJavaErrScan;
+
+    @FXML
+    private CheckBox checkBoxPythonRateScan;
+
+    private ConnectionWithRedmine connectionToRedmine;
+    private RedmineJournalsReader journalReader;
+
     public void initialize(URL url, ResourceBundle bn) {
 
         r.readXML("ProjectKey.xml");
@@ -72,6 +99,25 @@ public class FXMLDocumentController implements Initializable {
         ObservableList<String> userNames = FXCollections.observableArrayList(r.usersNameList);
         comboxUserName.setItems(userNames);
 
+        ArrayList<Float> ratingValues = new ArrayList<Float>();
+        for (float a = 10; a >= -2.00; a = (float) (a - 0.25)) {
+            ratingValues.add(a);
+        }
+
+        ObservableList<Float> pythonRatingValues = FXCollections.observableArrayList(ratingValues);
+        comboBoxPythonRating.setItems(pythonRatingValues);
+
+        final ToggleGroup groupIssueStatus = new ToggleGroup();
+        radioButtonStatusClosed.setToggleGroup(groupIssueStatus);
+        radioButtonStatusClosed.setSelected(true);
+        radioButtonStatusClosed.requestFocus();
+        radioButtonStatusApproved.setToggleGroup(groupIssueStatus);
+
+        final ToggleGroup groupAppointment = new ToggleGroup();
+        radioButtonAppointForStudent.setToggleGroup(groupAppointment);
+        radioButtonAppointForStudent.setSelected(true);
+        radioButtonAppointForStudent.requestFocus();
+        radioButtonAppointForProfessor.setToggleGroup(groupAppointment);
     }
 
     @FXML
@@ -96,31 +142,41 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private void handleButtonAction(ActionEvent event) {
-        ConnectionWithRedmine connect = this.handleProjectChoice();
+
         if (!comboxUserName.getValue().toString().isEmpty()
                 && !comboxProject.getValue().toString().isEmpty()
                 && !comboxVersion.getValue().toString().isEmpty()) {
 
             List<Issue> issues = null;
+            ArrayList<String> journals = null;
             try {
-                issues = connect.getIssues();
+                issues = connectionToRedmine.getIssues();
             } catch (RedmineException ex) {
                 Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //ArrayList<Integer> attachID = new ArrayList<>();
 
             for (Issue issue : issues) {
                 if (issue.getStatusName() != "Closed" && issue.getStatusName() != "Approved") {
                     System.out.println(issue.toString());
-                    connect.setVersionForCheck((String) comboxVersion.getValue(), issue);
+                    connectionToRedmine.setVersionForCheck((String) comboxVersion.getValue(), issue);
+                    journals = journalReader.getJournals(issue.getId().toString());
+                    for (String journal : journals) {
+                        if (!journal.equals(comboxUserName.getValue().toString())) {
+                            connectionToRedmine.setStudentName(journal);
+                            break;
+                        }
+                    }
 
                 }
             }
+
+            connectionToRedmine.setProfessorName(comboxUserName.getValue().toString());
         }
+
     }
 
     @FXML
-    private ConnectionWithRedmine handleProjectChoice() {
+    private void handleProjectChoice() {
 
         if (textFieldURL.getText().isEmpty()) {
             Properties.url = "http://www.hostedredmine.com";
@@ -139,9 +195,10 @@ public class FXMLDocumentController implements Initializable {
 
         Collection<Version> versions = new ArrayList();
 
-        ConnectionWithRedmine connection = new ConnectionWithRedmine(Properties.apiAccessKey, Properties.projectKey, Properties.url);
+        connectionToRedmine = new ConnectionWithRedmine(Properties.apiAccessKey, Properties.projectKey, Properties.url);
+        journalReader = new RedmineJournalsReader(Properties.url, Properties.apiAccessKey);
         try {
-            versions = connection.getVersions(Properties.projectKey);
+            versions = connectionToRedmine.getVersions(Properties.projectKey);
         } catch (RedmineException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -153,19 +210,52 @@ public class FXMLDocumentController implements Initializable {
         }
         ObservableList<String> targetVersionLost = FXCollections.observableArrayList(versii);
         comboxVersion.setItems(targetVersionLost);
-        
-        return connection;
+
     }
-    
+
     @FXML
-    private void handleJavaErrorAmount() {
-        ConnectionWithRedmine connect = this.handleProjectChoice();
-        connect.javaErrorAmount = Integer.parseInt(textFieldJavaErrAmount.getText());
-        
-        if (checkBoxPerevod.isSelected()) {
-            connect.perevod = "Da";
+    private void handleJavaErrorScanCheck() {
+        if (checkBoxJavaErrScan.isSelected()) {
+            connectionToRedmine.setProverka(textFieldJavaErrorAmount.getText().toString());
         }
-            
+        //connectionToRedmine.setJavaErrorsAmount(Integer.parseInt(textFieldJavaErrorAmount.getText()));
+
+    }
+    @FXML
+    private void handlePyhtonRatingScanCheck() {
+        if (checkBoxPythonRateScan.isSelected()) {
+            connectionToRedmine.setRating(Float.parseFloat(comboBoxPythonRating.getValue().toString()));
+        }
+    }
+
+    @FXML
+    private void handlePerevodCheck() {
+
+        if (checkBoxPerevod.isSelected()) {
+            connectionToRedmine.setPerevod(true);
+        } else {
+            connectionToRedmine.setPerevod(false);
+        }
+    }
+
+    @FXML
+    private void handleIssueStatusRadioButton() {
+
+        if (radioButtonStatusApproved.isSelected()) {
+            connectionToRedmine.setIssueStatus(4);
+        } else if (radioButtonStatusClosed.isSelected()) {
+            connectionToRedmine.setIssueStatus(5);
+        }
+    }
+
+    @FXML
+    private void handeRadioButtonAppointments() {
+
+        if (radioButtonAppointForStudent.isSelected()) {
+            connectionToRedmine.setAssigneeName(connectionToRedmine.getStudentName());
+        } else if (radioButtonAppointForProfessor.isSelected()) {
+            connectionToRedmine.setAssigneeName(connectionToRedmine.getProfessorName());
+        }
     }
 
     public Collection<String> readFile(String fileDir) {

@@ -5,24 +5,12 @@
  */
 package systemfx;
 
-import java.io.IOException;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import com.taskadapter.redmineapi.RedmineException;
-import com.taskadapter.redmineapi.bean.Attachment;
-import com.taskadapter.redmineapi.bean.CustomField;
-import com.taskadapter.redmineapi.bean.Issue;
-import com.taskadapter.redmineapi.bean.Journal;
-import com.taskadapter.redmineapi.bean.Version;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Scanner;
-import static jdk.nashorn.tools.ShellFunctions.input;
 /**
  *
  * @author user

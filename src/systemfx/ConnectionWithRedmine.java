@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -44,9 +45,14 @@ public class ConnectionWithRedmine {
     private String apiAccessKey;
     private String projectKey;
     private Integer queryId = null;
-    int javaErrorAmount = 0;
-    double pythonRating = 0;
-    String perevod = null;
+    private Integer neededJavaErrorAmount;
+    private float neededPythonRating;
+    boolean perevod;
+    private String proverka = "";
+    private Integer issueStatus;
+    private String studentName = "";
+    private String professorName = "";
+    private String assigneeName = "";
 
     private RedmineManager mgr;
     private IssueManager issueManager;
@@ -69,6 +75,46 @@ public class ConnectionWithRedmine {
         this.userManager = mgr.getUserManager();
     }
 
+    public void setRating(Float value) {
+        this.neededPythonRating = value;
+    }
+
+    public void setJavaErrorsAmount(Integer value) {
+        this.neededJavaErrorAmount = value;
+    }
+
+    public void setPerevod(Boolean value) {
+        this.perevod = value;
+    }
+
+    public void setIssueStatus(Integer value) {
+        this.issueStatus = value;
+    }
+
+    public void setProverka(String value) {
+        this.proverka = value;
+    }
+
+    public void setStudentName(String value) {
+        this.studentName = value;
+    }
+
+    public void setProfessorName(String value) {
+        this.professorName = value;
+    }
+
+    public void setAssigneeName(String value) {
+        this.assigneeName = value;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public String getProfessorName() {
+        return professorName;
+    }
+
     public void saveAttachment(Issue issue) throws IOException {
         Collection<Attachment> issueAttachment = issue.getAttachments();
         ArrayList<Attachment> issueAttachments = new ArrayList<>(issueAttachment);
@@ -85,35 +131,38 @@ public class ConnectionWithRedmine {
                     downloadAttachments(attach.getContentURL(),
                             apiAccessKey,
                             fileToManage);
-                    
+
                     if (attach.getFileName().endsWith(".py")) {
                         new MyPLint().startPylint(attach.getFileName());
                         this.uploadAttachment(issue, ".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
-                        String result = readLastLineInFile(".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
-                       // double pyRating = this.pythonRatingCheck(result);
-                       // if (pythonRating > pyRating) {
-                       //     issue.setStatusId(4);
-                      //  }
-                        issue.setNotes(result);
+                        String lastLineInReport = readLastLineInFile(".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
+                        float studentPythonRating = this.pythonRatingCheck(lastLineInReport);
+                        if (perevod == true && neededPythonRating <= studentPythonRating) {
+                            System.out.println(neededPythonRating + " menshe " + studentPythonRating);
+                            issue.setStatusId(issueStatus);
+                            issue.setAssigneeName(assigneeName);
+                        }
+                        issue.setNotes(lastLineInReport);
                         this.updateIssue(issue);
-
                     }
-                    
+
                     if (attach.getFileName().endsWith(".java")) {
                         new MyCheckStyle().startCheckStyle(attach.getFileName());
                         this.uploadAttachment(issue, ".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
                         String lastLine = readLastLineInFile(".\\myFiles\\" + attach.getFileName() + "_errorReport.txt");
-                        int errorAmount = this.javaErrorAmount(lastLine);
-                        if (javaErrorAmount <= errorAmount && perevod.equals("Da")) {
-                            issue.setStatusId(5);
-                            int id = issue.getAuthorId();
-                            issue.setAssigneeId(id);
+                        int studentJavaErrorAmount = this.javaErrorAmountDetectionInFile(lastLine);
+                        System.out.println("we have:" + proverka);
+
+                        if (perevod == true) {
+                            System.out.println("we need " + neededJavaErrorAmount + " but there are " + studentJavaErrorAmount);
+                            issue.setStatusId(issueStatus);
+                            issue.setAssigneeName(assigneeName);
                         }
                         issue.setNotes(lastLine);
                         this.updateIssue(issue);
                     }
-                    
-                    // cleanDirectory(new File(".\\myFiles\\"));
+
+                    cleanDirectory(new File(".\\myFiles\\"));
                 }
             } else {
                 continue;
@@ -146,7 +195,6 @@ public class ConnectionWithRedmine {
         return issues;
     }
 
-   
     public Collection<Version> getVersions(String projectKey) throws RedmineException {
         Project project = projectManager.getProjectByKey(projectKey);
         int projectID = project.getId();
@@ -159,11 +207,10 @@ public class ConnectionWithRedmine {
         return issue;
     }
 
-    public User getUser() throws RedmineException {
+    /*public User getUser() throws RedmineException {
         User user = userManager.getCurrentUser();
         return user;
-    }
-
+    }*/
     public void uploadAttachment(Issue issue, String path) {
 
         try {
@@ -247,7 +294,7 @@ public class ConnectionWithRedmine {
         return result;
     }
 
-    public Integer javaErrorAmount(String string) {
+    public Integer javaErrorAmountDetectionInFile(String string) {
 
         ArrayList<String> words = new ArrayList<>();
         if (!string.isEmpty()) {
@@ -262,11 +309,31 @@ public class ConnectionWithRedmine {
         return errorAmount;
     }
 
-    public Double pythonRatingCheck(String string) {
-        if (!string.isEmpty()) {
+    public Float pythonRatingCheck(String lastStringInReport) {
+        ArrayList<String> splittedWords = new ArrayList<>();
+        //String result = "";
+        if (!lastStringInReport.isEmpty()) {
+            for (String word : lastStringInReport.split(" ")) {
+                splittedWords.add(word);
+            }
+        }
+        String matchedConstruction = "";
+        for (String word : splittedWords) {
+            if (Pattern.compile(".?\\d+(\\.)?(\\d+)?").matcher(word).find()) {
+                System.out.println(word);
+                matchedConstruction = word;
+                break;
+            }
 
         }
-        return 1.1;
+        for (String rateValue : matchedConstruction.split("/")) {
+            matchedConstruction = rateValue;
+            break;
+        }
+
+        float rateValue = Float.parseFloat(matchedConstruction);
+        System.out.println(rateValue);
+        return rateValue;
     }
 
     public void updateIssue(Issue issue) {

@@ -1,0 +1,11 @@
+.svn/
+.hg/
+.hgtags/
+*.py[cod]
+log
+build
+dist/
+astroid.egg-info/
+.tox
+.coverage
+.coverage.*

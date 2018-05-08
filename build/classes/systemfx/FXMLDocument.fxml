@@ -46,22 +46,25 @@
          <content>
             <AnchorPane prefHeight="180.0" prefWidth="344.0">
                <children>
-                  <AnchorPane layoutX="34.0" layoutY="35.0" prefHeight="206.0" prefWidth="400.0">
+                  <AnchorPane layoutX="34.0" layoutY="35.0" prefHeight="346.0" prefWidth="456.0">
                      <children>
-                        <CheckBox layoutX="14.0" layoutY="14.0" mnemonicParsing="false" selected="true" text="Порог ошибок (Java)" />
-                        <CheckBox layoutX="14.0" layoutY="66.0" mnemonicParsing="false" selected="true" text="Допустимый рейтинг (Python)" />
-                        <TextField fx:id="textFieldJavaErrAmount" layoutX="193.0" layoutY="9.0" prefHeight="31.0" prefWidth="51.0" text="0" />
-                        <ComboBox layoutX="259.0" layoutY="61.0" prefHeight="31.0" prefWidth="70.0" promptText="10" />
+                        <CheckBox fx:id="checkBoxJavaErrScan" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#handleJavaErrorScanCheck" selected="true" text="Порог ошибок (Java)" />
+                        <CheckBox fx:id="checkBoxPythonRateScan" layoutX="14.0" layoutY="66.0" mnemonicParsing="false" onAction="#handlePyhtonRatingScanCheck" selected="true" text="Допустимый рейтинг (Python)" />
+                        <ComboBox fx:id="comboBoxPythonRating" layoutX="232.0" layoutY="59.0" onAction="#handlePyhtonRatingScanCheck" prefHeight="31.0" prefWidth="73.0" promptText="10" />
+                        <AnchorPane layoutX="-32.0" layoutY="144.0" prefHeight="177.0" prefWidth="334.0">
+                           <children>
+                              <RadioButton fx:id="radioButtonStatusClosed" layoutX="94.0" layoutY="14.0" mnemonicParsing="false" onAction="#handleIssueStatusRadioButton" text="Closed" />
+                              <RadioButton fx:id="radioButtonStatusApproved" layoutX="94.0" layoutY="43.0" mnemonicParsing="false" onAction="#handleIssueStatusRadioButton" text="Approved" />
+                              <Label layoutX="65.0" layoutY="80.0" text="На кого переводить задачи?" />
+                              <RadioButton fx:id="radioButtonAppointForStudent" layoutX="94.0" layoutY="107.0" mnemonicParsing="false" onAction="#handeRadioButtonAppointments" text="Студент" />
+                              <RadioButton fx:id="radioButtonAppointForProfessor" layoutX="94.0" layoutY="132.0" mnemonicParsing="false" onAction="#handeRadioButtonAppointments" text="Преподаватель" />
+                           </children>
+                        </AnchorPane>
+                        <CheckBox fx:id="checkBoxPerevod" layoutX="14.0" layoutY="127.0" mnemonicParsing="false" onAction="#handlePerevodCheck" text="Закрывать проверенные задачи?" />
+                        <Button layoutX="335.0" layoutY="310.0" mnemonicParsing="false" text="Начать проверку" />
+                        <TextField fx:id="textFieldJavaErrorAmount" layoutX="232.0" layoutY="7.0" onAction="#handleJavaErrorScanCheck" prefHeight="31.0" prefWidth="73.0" promptText="5" />
                      </children>
                   </AnchorPane>
-                  <AnchorPane layoutX="34.0" layoutY="181.0" prefHeight="120.0" prefWidth="334.0">
-                     <children>
-                        <CheckBox fx:id="checkBoxPerevod" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" text="Закрывать проверенные задачи?" />
-                        <RadioButton layoutX="57.0" layoutY="50.0" mnemonicParsing="false" text="Closed" />
-                        <RadioButton layoutX="57.0" layoutY="85.0" mnemonicParsing="false" selected="true" text="Approved" />
-                     </children>
-                  </AnchorPane>
-                  <Button layoutX="409.0" layoutY="293.0" mnemonicParsing="false" text="Начать проверку" />
                </children>
             </AnchorPane>
          </content></Tab>
